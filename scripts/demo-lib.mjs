@@ -8,9 +8,10 @@ import { fileURLToPath } from "node:url";
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 /** Settings from demo.env (copy demo.env.example), overridden by real environment variables. */
-export function loadEnv() {
-  const file = path.join(ROOT, "demo.env");
-  if (!fs.existsSync(file)) throw new Error("demo.env not found. Copy demo.env.example to demo.env and fill it in.");
+export function loadEnv(profile) {
+  const name = profile ? `demo.${profile}.env` : "demo.env";
+  const file = path.join(ROOT, name);
+  if (!fs.existsSync(file)) throw new Error(`${name} not found. Copy demo.env.example to ${name} and fill it in.`);
   const env = {};
   for (const line of fs.readFileSync(file, "utf8").split(/\r?\n/)) {
     const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*?)\s*$/);

@@ -4,4 +4,6 @@ dist
 .tripwire.seed
 HANDOVER.md
 demo.env
+demo.*.env
+demo.*.promises.json
 *.tgz
