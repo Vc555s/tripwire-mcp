@@ -1,6 +1,6 @@
 // Site scanning: discover pages, then extract what a user can interact with on each.
-// Discovery uses Firecrawl's /map when FIRECRAWL_API_KEY is set (fast, handles sitemaps and JS sites),
-// otherwise a same-origin breadth-first crawl in Playwright. Extraction always runs in a real browser
+// Discovery starts from Firecrawl's /map when FIRECRAWL_API_KEY is set (handles sitemaps and JS sites)
+// and always continues with a same-origin breadth-first crawl in Playwright. Extraction runs in a real browser
 // so the selectors we hand back are ones Playwright can actually use.
 
 import type { Page } from "playwright-core";
@@ -17,6 +17,7 @@ async function firecrawlMap(url: string, limit: number): Promise<string[] | null
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({ url, limit }),
+      signal: AbortSignal.timeout(20_000),
     });
     if (!res.ok) return null;
     const body = (await res.json()) as { links?: (string | { url: string })[] };
@@ -123,14 +124,13 @@ export async function scanSite(baseUrl: string, maxPages = 15): Promise<Site> {
       try {
         const info = await extract(page, next);
         pages.push(info);
-        if (!mapped) {
-          for (const l of info.links) {
-            if (!l.href.startsWith(origin)) continue;
-            if (/\.(pdf|png|jpe?g|gif|svg|zip|mp4)$/i.test(l.href)) continue;
-            if (/logout|signout|delete/i.test(l.href)) continue; // never click destructive links while scanning
-            const n = norm(l.href);
-            if (!seen.has(n)) queue.push(n);
-          }
+        // Also follow the links on each page: Firecrawl's map can miss pages of a small or new site.
+        for (const l of info.links) {
+          if (!l.href.startsWith(origin)) continue;
+          if (/\.(pdf|png|jpe?g|gif|svg|zip|mp4)$/i.test(l.href)) continue;
+          if (/logout|signout|delete/i.test(l.href)) continue; // never click destructive links while scanning
+          const n = norm(l.href);
+          if (!seen.has(n)) queue.push(n);
         }
       } catch {
         /* skip unreachable page */
