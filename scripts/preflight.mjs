@@ -65,8 +65,9 @@ try {
 
   await check("promises are seeded with a baseline", async () => {
     const sites = (await call("tripwire_history", { limit: 1 })).json.sites;
-    must(sites.length === 1, `expected 1 site, found ${sites.length}`);
-    siteId = sites[0];
+    const wanted = new URL(env.MAIN_URL).host.replace(/[^a-z0-9]+/gi, "-");
+    must(sites.includes(wanted), `no site ${wanted} in the store (found ${sites.join(", ") || "none"})`);
+    siteId = wanted;
     const list = (await call("tripwire_list_checks", { siteId })).json;
     must(list.baselineRunId, "no baseline");
     must(list.checks.some((c) => c.intent.includes("WELCOME10")), "the WELCOME10 promise is missing");
@@ -139,7 +140,7 @@ await check("shop working copy is on the buggy branch, ready for the fix", async
 await check("reset script restores the store", async () => {
   execFileSync(process.execPath, [path.join(ROOT, "scripts", "reset-demo.mjs"), "--store-only"], { stdio: "ignore" });
   const sites = path.join(env.TRIPWIRE_HOME, "sites");
-  const site = fs.readdirSync(sites)[0];
+  const site = siteId;
   const runs = fs.readdirSync(path.join(sites, site, "runs"));
   must(fs.existsSync(path.join(sites, site, "baseline.json")) && runs.length === 1, `expected the baseline and 1 run, found ${runs.length} runs`);
 });

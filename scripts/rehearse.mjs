@@ -21,7 +21,7 @@ fs.mkdirSync(out, { recursive: true });
 const { client, call } = await connect(env);
 let ok = false;
 try {
-  const siteId = (await call("tripwire_history", { limit: 1 })).json.sites[0];
+  const siteId = new URL(env.MAIN_URL).host.replace(/[^a-z0-9]+/gi, "-");
 
   step(1, "the promises, in the owner's words");
   for (const c of (await call("tripwire_list_checks", { siteId })).json.checks) console.log(`  ${c.priority.padEnd(8)} ${c.intent}`);
