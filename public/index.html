@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tripwire · Did I break anything?</title>
+<meta name="description" content="Describe what must keep working on your site. Tripwire checks it in a real browser after every change. Free, open source, one click to add to Cursor.">
+<style>
+  :root { --bg:#0b0e17; --card:#141927; --line:#232a3b; --text:#c9cfda; --muted:#8a93a6; --white:#fff; --amber:#f5a623; --green:#3ddc97; --red:#f0503c; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+  .mono { font-family: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace; }
+  .kicker { color:var(--amber); font-size:13px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; }
+  header { padding: 72px 0 40px; }
+  h1 { color:var(--white); font-size: clamp(44px, 8vw, 76px); line-height:1.05; margin:.25em 0 .2em; letter-spacing:-.02em; }
+  .lead { font-size: clamp(19px, 2.6vw, 24px); max-width: 30em; margin: 0 0 32px; }
+  h2 { color:var(--white); font-size: 28px; margin: 0 0 20px; letter-spacing:-.01em; }
+  section { padding: 44px 0; border-top: 1px solid var(--line); }
+  .buttons { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; min-height:52px; padding: 0 24px; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--white); font:inherit; font-weight:600; text-decoration:none; cursor:pointer; }
+  .btn:hover, .btn:focus-visible { border-color:var(--amber); outline:none; }
+  .btn.primary { background:var(--amber); border-color:var(--amber); color:#14100a; }
+  .btn.primary:hover, .btn.primary:focus-visible { background:#ffbb45; }
+  .note { color:var(--muted); font-size:15px; margin: 14px 0 0; min-height: 1.5em; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:18px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:24px; }
+  .card h3 { color:var(--white); font-size:19px; margin: 8px 0 8px; }
+  .card p { margin:0; }
+  .num { color:var(--amber); font-size:13px; letter-spacing:.12em; font-weight:700; }
+  .pill { display:inline-block; padding: 2px 12px; border-radius:999px; font-size:13px; font-weight:700; color:#0b0e17; margin: 0 6px 10px 0; }
+  .safe { background:var(--green); } .changed { background:var(--amber); } .broken { background:var(--red); }
+  .evidence { border:1px solid var(--red); background:#1a0f12; border-radius:12px; padding:20px 24px; font-size:15px; color:#f2c4bc; overflow-wrap:anywhere; }
+  .evidence b { color:#ffd9d2; }
+  .caption { color:var(--muted); font-size:14px; margin-top:10px; }
+  pre { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; overflow-x:auto; font-size:14px; color:var(--text); margin: 14px 0 0; }
+  ol.steps { padding-left: 1.3em; margin:0; }
+  ol.steps li { margin-bottom: 12px; }
+  q { color:var(--white); }
+  a { color:var(--amber); }
+  details { margin-top: 18px; }
+  summary { cursor:pointer; color:var(--white); font-weight:600; }
+  footer { padding: 32px 0 56px; border-top: 1px solid var(--line); color:var(--muted); font-size:15px; display:flex; flex-wrap:wrap; gap:8px 24px; justify-content:space-between; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker mono">Regression guard for people who build with AI</div>
+    <h1>Tripwire</h1>
+    <p class="lead">Describe what must keep working. Tripwire checks it in a real browser after every change, and tells you before a customer does.</p>
+    <div class="buttons">
+      <a class="btn primary" id="add" href="https://github.com/Vc555s/tripwire-mcp#install">Add to Cursor</a>
+      <button class="btn" id="copy" type="button">Copy setup prompt</button>
+      <a class="btn" id="download" href="https://github.com/Vc555s/tripwire-mcp/releases/latest">Download</a>
+    </div>
+    <p class="note" id="note" role="status" aria-live="polite">Free and open source. Runs on your own computer. Needs Node.js 18 or newer and Google Chrome.</p>
+  </header>
+
+  <section aria-labelledby="start">
+    <h2 id="start">Up and running in three steps</h2>
+    <ol class="steps">
+      <li>Press <b>Add to Cursor</b> and confirm. Cursor installs Tripwire for you. There is nothing to configure and no key to enter.</li>
+      <li>In the Cursor chat, type: <q>Set up Tripwire for https://my-site.com</q>. Tripwire looks at your site and suggests what is worth guarding.</li>
+      <li>Say what must never break, in your own words: <q>If I use the code WELCOME10, the total should be €13.05.</q> From then on, ask <q>Did I break anything?</q> after any change.</li>
+    </ol>
+    <details>
+      <summary>Using another editor, or prefer to set it up by hand?</summary>
+      <p>Tripwire is an MCP server, so it also works in VS Code, Windsurf, Cline and other MCP clients. Add this to the editor's MCP settings (in Cursor: <span class="mono">.cursor/mcp.json</span>):</p>
+      <pre class="mono" id="config"></pre>
+    </details>
+  </section>
+
+  <section aria-labelledby="how">
+    <h2 id="how">How it works</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="num mono">01 · SAY IT</div>
+        <h3>A promise in plain words</h3>
+        <p>You write a sentence about what must keep working. Your editor's AI turns it into browser steps. There is no test code to write.</p>
+      </div>
+      <div class="card">
+        <div class="num mono">02 · CHECK IT</div>
+        <h3>Checked in a real browser</h3>
+        <p>After every change, the coding agent runs your promises against the new version and compares it with the last good one.</p>
+      </div>
+      <div class="card">
+        <div class="num mono">03 · KNOW</div>
+        <h3>One verdict, with proof</h3>
+        <p><span class="pill safe mono">SAFE</span><span class="pill changed mono">CHANGED</span><span class="pill broken mono">BROKEN</span><br>With a screenshot, a report, and a GitHub issue linked to the change that caused it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="example">
+    <h2 id="example">What it catches</h2>
+    <div class="evidence mono">
+      <b>BROKEN · Discount code WELCOME10 takes 10% off</b><br>
+      expected “€13.05”, showed “€14.49” · the page still said “10% off applied”
+    </div>
+    <p class="caption">An example from the demo shop, where a tidy-up of one line changed the price. Nothing crashed and no error appeared. The bug is planted for the demo; the check that catches it is the real one.</p>
+  </section>
+
+  <footer>
+    <span>Built by Vishal Jadhav · MIT licence</span>
+    <span><a href="https://github.com/Vc555s/tripwire-mcp">github.com/Vc555s/tripwire-mcp</a></span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var file = "https://github.com/Vc555s/tripwire-mcp/releases/download/v0.1.0/tripwire-mcp-0.1.0.tgz";
+  var config = { command: "npx", args: ["-y", file] };
+  var note = document.getElementById("note");
+  var say = function (text) { note.textContent = text; };
+
+  document.getElementById("add").href = "cursor://anysphere.cursor-deeplink/mcp/install?name=tripwire&config=" + encodeURIComponent(btoa(JSON.stringify(config)));
+  document.getElementById("add").addEventListener("click", function () {
+    say("Cursor should open and ask you to confirm. If nothing happens, Cursor is not installed on this device: use Copy setup prompt instead.");
+  });
+  document.getElementById("download").href = file;
+  document.getElementById("config").textContent = JSON.stringify({ mcpServers: { tripwire: config } }, null, 2);
+
+  var prompt = [
+    "Install the Tripwire MCP server for this project.",
+    "1. Add this server to .cursor/mcp.json (create the file if it does not exist, and keep any servers already in it):",
+    JSON.stringify({ mcpServers: { tripwire: config } }, null, 2),
+    "2. Tell me to switch on \"tripwire\" in Cursor Settings under MCP, and wait until I say it is on.",
+    "3. Ask me for the address of my site and which GitHub repo it belongs to, then call tripwire_scan_site and tripwire_suggest_checks.",
+    "4. Ask me what must never break, in my own words, and what is at stake if it does. Save each answer with tripwire_add_check.",
+    "5. Call tripwire_guard to save the current state as the known-good baseline.",
+    "From now on, call tripwire_guard after every change you make, before you tell me the change is done."
+  ].join("\n");
+  document.getElementById("copy").addEventListener("click", function () {
+    var done = function () { say("Copied. Paste it into the chat of Cursor or any editor with an AI agent."); };
+    var fallback = function () {
+      var box = document.createElement("textarea");
+      box.value = prompt; document.body.appendChild(box); box.select();
+      try { document.execCommand("copy"); done(); } catch (e) { say("Copying is blocked in this browser. Use the manual setup below."); }
+      box.remove();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(prompt).then(done, fallback); else fallback();
+  });
+})();
+</script>
+</body>
+</html>
